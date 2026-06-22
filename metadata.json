@@ -1,0 +1,5 @@
+{
+  "name": "Pokédex",
+  "description": "Uma Pokédex moderna, rápida e elegante, com busca avançada, filtros por tipo, carregamento sob demanda e construção e compartilhamento de equipes.",
+  "requestFramePermissions": []
+}
