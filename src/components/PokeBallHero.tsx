@@ -249,9 +249,7 @@ export function PokeBallHero({
                 <img
                   src={POKEBALL_IMAGES[activeTheme.colorName]}
                   alt={activeTheme.name}
-                  width={360}
-                  height={360}
-                  className="object-contain"
+                  className="h-36 w-36 object-contain sm:h-44 sm:w-44 md:h-64 md:w-64 lg:h-[360px] lg:w-[360px]"
                   draggable={false}
                   onDragStart={(e) => e.preventDefault()}
                   onContextMenu={(e) => e.preventDefault()}
