@@ -14,18 +14,17 @@ Uma Pokédex web moderna e interativa, construída com React, TypeScript e Vite,
 - **Montador de Times**: monte um time personalizado com nome, ícone e cor de tema
 - **Compartilhamento de times** via link/token codificado, com importação por outro usuário
 - **Cache em memória** das requisições para evitar chamadas duplicadas à API
-- **Interface responsiva** com animações fluidas (Motion) e ícones (Phosphor Icons / Lucide)
-- Conteúdo traduzido para **português** (nomes de tipos e estatísticas)
+- **Interface responsiva** com animações fluidas (Motion)
 
 ## 🛠️ Tecnologias
 
-| Categoria           | Stack                                |
-| ------------------- | ------------------------------------ |
-| Core                | React 19, TypeScript, Vite 6         |
-| Estilização         | Tailwind CSS 4                       |
-| Animações & Ícones  | Motion, Phosphor Icons, Lucide React |
-| Dados               | [PokéAPI](https://pokeapi.co/)       |
-| Servidor (produção) | Express                              |
+| Categoria           | Stack                          |
+| ------------------- | ------------------------------ |
+| Core                | React 19, TypeScript, Vite 6   |
+| Estilização         | Tailwind CSS 4                 |
+| Animações & Ícones  | Motion, Phosphor Icons         |
+| Dados               | [PokéAPI](https://pokeapi.co/) |
+| Servidor (produção) | Express                        |
 
 ## 📂 Estrutura do projeto
 

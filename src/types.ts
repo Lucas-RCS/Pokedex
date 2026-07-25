@@ -80,7 +80,7 @@ export interface Team {
   id: string;
   name: string;
   pokemonIds: number[]; // up to 6
-  icon: string; // emoji or lucide key
+  icon: string; // emoji
   color: string; // hex or tailwind class name
   createdAt: number;
 }
