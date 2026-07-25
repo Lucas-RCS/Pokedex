@@ -24,7 +24,6 @@ Uma Pokédex web moderna e interativa, construída com React, TypeScript e Vite,
 | Estilização         | Tailwind CSS 4                 |
 | Animações & Ícones  | Motion, Phosphor Icons         |
 | Dados               | [PokéAPI](https://pokeapi.co/) |
-| Servidor (produção) | Express                        |
 
 ## 📂 Estrutura do projeto
 
