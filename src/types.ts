@@ -47,6 +47,10 @@ export interface Pokemon {
   name: string;
   height: number;
   weight: number;
+  species: {
+    name: string;
+    url: string;
+  };
   types: PokemonType[];
   abilities: PokemonAbility[];
   stats: PokemonStat[];
@@ -70,8 +74,11 @@ export interface PokemonSpecies {
 }
 
 export interface EvolutionChainNode {
+  nodeKey: string;
   speciesName: string;
   id: number;
+  displayId: number;
+  lookupName: string;
   imageUrl: string;
   types: string[];
   requirements: EvolutionRequirement[];

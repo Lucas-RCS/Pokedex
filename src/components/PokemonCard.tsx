@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { Pokemon } from "../types";
-import { pokemonApi, getOfficialArtworkUrl } from "../services/api";
+import {
+  pokemonApi,
+  getOfficialArtworkUrl,
+  extractIdFromUrl,
+} from "../services/api";
 import { TYPE_COLORS, TYPE_TRANSLATIONS } from "../constants";
 import { SparkleIcon } from "@phosphor-icons/react";
 
@@ -25,6 +29,13 @@ function getGenerationLabel(id: number): string {
   return "GEN 9";
 }
 
+function humanizePokemonName(value: string): string {
+  return value
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 export function PokemonCard({
   id,
   name,
@@ -40,7 +51,7 @@ export function PokemonCard({
   useEffect(() => {
     let active = true;
     pokemonApi
-      .getPokemonDetails(id)
+      .getPokemonDetails(name || id)
       .then((data) => {
         if (active) {
           setDetails(data);
@@ -59,10 +70,16 @@ export function PokemonCard({
   const primaryType = details?.types[0]?.type.name || "normal";
   const primaryColor = TYPE_COLORS[primaryType] || "#A8A77A";
 
-  const formattedId = `#${String(id).padStart(3, "0")}`;
-  const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
-  const artworkUrl = getOfficialArtworkUrl(id);
-  const genLabel = getGenerationLabel(id);
+  const displayDexId = details?.species?.url
+    ? extractIdFromUrl(details.species.url)
+    : (details?.id ?? id);
+  const formattedId = `#${String(displayDexId).padStart(3, "0")}`;
+  const capitalizedName = humanizePokemonName(name);
+  const artworkUrl =
+    details?.sprites.other?.["official-artwork"]?.front_default ||
+    details?.sprites.front_default ||
+    getOfficialArtworkUrl(details?.id ?? id);
+  const genLabel = getGenerationLabel(displayDexId);
 
   return (
     <div

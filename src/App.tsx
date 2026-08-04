@@ -21,6 +21,12 @@ interface BasePokemonItem {
   url: string;
 }
 
+const BASE_POKEDEX_MAX_ID = 1025;
+
+function normalizeSearchValue(value: string): string {
+  return value.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 const ALL_TYPES_LIST = [
   "normal",
   "fire",
@@ -97,9 +103,9 @@ export default function App() {
     let active = true;
     setLoadingList(true);
 
-    // Fetch 1025 pokemon once in background
+    // Fetch base Pokémon and form variants once in background
     pokemonApi
-      .getPokemonList(1025, 0)
+      .getPokemonList(2000, 0)
       .then((data) => {
         if (active) {
           setMasterList(data);
@@ -177,12 +183,22 @@ export default function App() {
 
   // 3. Compute client-side filter results based on search queries, selected types and generations
   useEffect(() => {
-    let currentList = selectedType
+    const rawSearch = searchQuery.trim();
+    const normalizedSearch = normalizeSearchValue(rawSearch);
+    const hasSearch = normalizedSearch.length > 0;
+    const isNumericSearch = hasSearch && /^\d+$/.test(normalizedSearch);
+    const shouldIncludeVariants = hasSearch && !isNumericSearch;
+
+    const sourceList = selectedType
       ? typeFilteredCache[selectedType] || []
       : masterList;
 
+    let currentList = shouldIncludeVariants
+      ? sourceList
+      : sourceList.filter((p) => p.id >= 1 && p.id <= BASE_POKEDEX_MAX_ID);
+
     // Apply selected generation filters deterministically
-    if (selectedGeneration !== "all") {
+    if (selectedGeneration !== "all" && !shouldIncludeVariants) {
       const gen = selectedGeneration;
       currentList = currentList.filter((p) => {
         if (gen === "1") return p.id >= 1 && p.id <= 151;
@@ -199,14 +215,15 @@ export default function App() {
     }
 
     // Apply text search keyword matches (name or precise numerical ID mapping)
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      currentList = currentList.filter(
-        (p) =>
-          p.name.includes(q) ||
-          String(p.id) === q ||
-          String(p.id).padStart(3, "0") === q,
-      );
+    if (hasSearch) {
+      currentList = currentList.filter((p) => {
+        const normalizedName = normalizeSearchValue(p.name);
+        return (
+          normalizedName.includes(normalizedSearch) ||
+          String(p.id) === normalizedSearch ||
+          String(p.id).padStart(3, "0") === normalizedSearch
+        );
+      });
     }
 
     // Apply selected sorting criteria
@@ -487,7 +504,7 @@ export default function App() {
                 >
                   {paginatedPokemon.map((p) => (
                     <PokemonCard
-                      key={p.id}
+                      key={p.url || `${p.id}-${p.name}`}
                       id={p.id}
                       name={p.name}
                       onViewDetails={(details) =>

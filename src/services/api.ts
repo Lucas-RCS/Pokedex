@@ -216,31 +216,62 @@ export const pokemonApi = {
     const buildTree = async (
       node: EvolutionChainApiNode,
       requirements: EvolutionRequirement[] = [],
+      pathKey: string = "root",
     ): Promise<EvolutionChainNode> => {
-      const id = extractIdFromUrl(node.species.url);
-      const speciesName = node.species.name;
+      const displayId = extractIdFromUrl(node.species.url);
+      const lookupName = node.species.name;
 
+      let resolvedId = displayId;
+      let resolvedSpeciesName = node.species.name;
+      let resolvedLookupName = lookupName;
       let types: string[] = [];
+      let imageUrl = getOfficialArtworkUrl(displayId);
+
       try {
-        const detail = await this.getPokemonDetails(id);
+        const detail = await this.getPokemonDetails(lookupName);
+        resolvedId = detail.id;
+        resolvedSpeciesName = detail.name;
+        resolvedLookupName = detail.name;
         types = detail.types.map((typeObj) => typeObj.type.name);
+
+        imageUrl =
+          detail.sprites.other?.["official-artwork"]?.front_default ||
+          detail.sprites.front_default ||
+          getOfficialArtworkUrl(detail.id);
       } catch {
-        types = [];
+        try {
+          const detail = await this.getPokemonDetails(displayId);
+          resolvedId = detail.id;
+          resolvedSpeciesName = detail.name;
+          resolvedLookupName = detail.name;
+          types = detail.types.map((typeObj) => typeObj.type.name);
+          imageUrl =
+            detail.sprites.other?.["official-artwork"]?.front_default ||
+            detail.sprites.front_default ||
+            getOfficialArtworkUrl(detail.id);
+        } catch {
+          types = [];
+          imageUrl = getOfficialArtworkUrl(displayId);
+        }
       }
 
       const evolvesTo = await Promise.all(
-        node.evolves_to.map((childNode) =>
-          buildTree(
-            childNode,
-            childNode.evolution_details.map(mapEvolutionRequirement),
-          ),
-        ),
+        node.evolves_to.map((childNode, childIndex) => {
+          const requirements = childNode.evolution_details.map(
+            mapEvolutionRequirement,
+          );
+
+          return buildTree(childNode, requirements, `${pathKey}-${childIndex}`);
+        }),
       );
 
       return {
-        speciesName,
-        id,
-        imageUrl: getOfficialArtworkUrl(id),
+        nodeKey: `${resolvedSpeciesName}-${resolvedId}-${lookupName}-${pathKey}`,
+        speciesName: resolvedSpeciesName,
+        id: resolvedId,
+        displayId,
+        lookupName: resolvedLookupName,
+        imageUrl,
         types,
         requirements,
         evolvesTo,

@@ -54,7 +54,7 @@ export function PokemonModal({
 
     // Fetch Species + Evolution Chain
     pokemonApi
-      .getPokemonSpecies(initialPokemon.id)
+      .getPokemonSpecies(initialPokemon.species?.name || initialPokemon.id)
       .then(async (species) => {
         if (!active) return;
 
@@ -87,13 +87,27 @@ export function PokemonModal({
   }, [initialPokemon]);
 
   // Load details on recursive navigation click
-  const handleSelectPokemon = async (id: number) => {
+  const handleSelectPokemon = async (
+    idOrName: number | string,
+    fallbackId?: number,
+  ) => {
     try {
       setLoadingExtra(true);
-      const detail = await pokemonApi.getPokemonDetails(id);
+      let detail: Pokemon;
+      try {
+        detail = await pokemonApi.getPokemonDetails(idOrName);
+      } catch (firstError) {
+        if (typeof idOrName === "string" && fallbackId !== undefined) {
+          detail = await pokemonApi.getPokemonDetails(fallbackId);
+        } else {
+          throw firstError;
+        }
+      }
       setActivePokemon(detail);
 
-      const species = await pokemonApi.getPokemonSpecies(id);
+      const species = await pokemonApi.getPokemonSpecies(
+        detail.species?.name || detail.id,
+      );
       const englishEntry = species.flavor_text_entries.find(
         (entry) => entry.language.name === "pt" || entry.language.name === "en",
       );
@@ -126,7 +140,10 @@ export function PokemonModal({
   }, [onClose]);
 
   const pName = activePokemon.name;
-  const capitalizedName = pName.charAt(0).toUpperCase() + pName.slice(1);
+  const capitalizedName = pName
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
   const formattedId = `#${String(activePokemon.id).padStart(3, "0")}`;
 
   const primaryType = activePokemon.types[0]?.type.name || "normal";
@@ -444,7 +461,7 @@ export function PokemonModal({
 
     return (
       <div
-        onClick={() => handleSelectPokemon(node.id)}
+        onClick={() => handleSelectPokemon(node.lookupName, node.id)}
         className={`w-full md:w-auto min-w-[150px] cursor-pointer p-4 rounded-2xl border flex flex-row md:flex-col items-center gap-4 md:gap-3 transition-all duration-300 ${
           isActive
             ? "bg-slate-850 border-indigo-500/80 scale-102 md:scale-105 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
@@ -477,10 +494,10 @@ export function PokemonModal({
         {/* Details */}
         <div className="flex-1 md:flex-initial text-left md:text-center min-w-0">
           <span className="text-[10px] font-mono text-slate-500 font-bold block leading-none mb-0.5">
-            #{String(node.id).padStart(3, "0")}
+            #{String(node.displayId).padStart(3, "0")}
           </span>
           <span className="text-sm font-black text-white capitalize block truncate">
-            {node.speciesName}
+            {humanizeSlug(node.speciesName)}
           </span>
 
           {/* Types Row */}
@@ -540,7 +557,7 @@ export function PokemonModal({
         <div className="flex flex-col gap-3 md:gap-4 w-full md:w-auto">
           {node.evolvesTo.map((child) => (
             <div
-              key={child.id}
+              key={child.nodeKey}
               className="flex flex-col justify-between md:flex-row items-center md:items-center gap-2 md:gap-3"
             >
               <EvolutionConnector child={child} />
