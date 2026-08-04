@@ -410,7 +410,7 @@ export function PokemonModal({
         optionNodes.push(
           <div
             key={`option-${index}`}
-            className="flex flex-wrap items-center justify-center gap-1"
+            className="flex flex-col items-center justify-center gap-1"
           >
             {parts}
           </div>,
@@ -535,7 +535,7 @@ export function PokemonModal({
     }
 
     return (
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-4 w-full md:w-auto">
+      <div className="flex flex-col md:flex-row items-center md:items-center gap-2 md:gap-4 w-full md:w-auto">
         <EvolutionNodeCard node={node} />
         <div className="flex flex-col gap-3 md:gap-4 w-full md:w-auto">
           {node.evolvesTo.map((child) => (
