@@ -74,6 +74,35 @@ export interface EvolutionChainNode {
   id: number;
   imageUrl: string;
   types: string[];
+  requirements: EvolutionRequirement[];
+  evolvesTo: EvolutionChainNode[];
+}
+
+export interface EvolutionRequirement {
+  trigger: string;
+  minLevel: number | null;
+  item: {
+    name: string;
+    spriteUrl: string;
+  } | null;
+  heldItem: {
+    name: string;
+    spriteUrl: string;
+  } | null;
+  minHappiness: number | null;
+  minBeauty: number | null;
+  minAffection: number | null;
+  knownMoveName: string | null;
+  knownMoveTypeName: string | null;
+  locationName: string | null;
+  timeOfDay: string | null;
+  tradeSpeciesName: string | null;
+  partySpeciesName: string | null;
+  partyTypeName: string | null;
+  relativePhysicalStats: number | null;
+  needsOverworldRain: boolean;
+  turnUpsideDown: boolean;
+  genderId: number | null;
 }
 
 export interface Team {

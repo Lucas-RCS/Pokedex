@@ -18,12 +18,12 @@ Uma Pokédex web moderna e interativa, construída com React, TypeScript e Vite,
 
 ## 🛠️ Tecnologias
 
-| Categoria           | Stack                          |
-| ------------------- | ------------------------------ |
-| Core                | React 19, TypeScript, Vite 6   |
-| Estilização         | Tailwind CSS 4                 |
-| Animações & Ícones  | Motion, Phosphor Icons         |
-| Dados               | [PokéAPI](https://pokeapi.co/) |
+| Categoria          | Stack                          |
+| ------------------ | ------------------------------ |
+| Core               | React 19, TypeScript, Vite 6   |
+| Estilização        | Tailwind CSS 4                 |
+| Animações & Ícones | Motion, Phosphor Icons         |
+| Dados              | [PokéAPI](https://pokeapi.co/) |
 
 ## 📂 Estrutura do projeto
 
@@ -80,7 +80,7 @@ npm run lint      # Verifica os tipos com o TypeScript (tsc --noEmit)
 
 ## 📌 Roadmap
 
-- [ ] Ajustar a visualização das cadeias evolutivas de Pokémon que possuem múltiplas evoluções ou requisitos específicos (itens, troca, felicidade, etc.).
+- [✔] Ajustar a visualização das cadeias evolutivas de Pokémon que possuem múltiplas evoluções ou requisitos específicos (itens, troca, felicidade, etc.).
 
 ## 👤 Autor
 

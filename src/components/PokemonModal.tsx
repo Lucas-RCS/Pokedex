@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { Pokemon, EvolutionChainNode } from "../types";
 import { pokemonApi, getOfficialArtworkUrl } from "../services/api";
 import {
@@ -34,9 +34,8 @@ export function PokemonModal({
 }: PokemonModalProps) {
   const [activePokemon, setActivePokemon] = useState<Pokemon>(initialPokemon);
   const [flavorText, setFlavorText] = useState<string>("");
-  const [evolutionChain, setEvolutionChain] = useState<EvolutionChainNode[]>(
-    [],
-  );
+  const [evolutionChain, setEvolutionChain] =
+    useState<EvolutionChainNode | null>(null);
   const [loadingExtra, setLoadingExtra] = useState(false);
   const [activeSpriteTab, setActiveSpriteTab] = useState<
     "official" | "default" | "shiny"
@@ -49,7 +48,7 @@ export function PokemonModal({
     let active = true;
     setLoadingExtra(true);
     setFlavorText("");
-    setEvolutionChain([]);
+    setEvolutionChain(null);
 
     setActivePokemon(initialPokemon);
 
@@ -157,6 +156,401 @@ export function PokemonModal({
 
   const typeNames = activePokemon.types.map((t) => t.type.name);
   const relations = calculateTypeRelations(typeNames);
+
+  const humanizeSlug = (value: string) =>
+    value
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+
+  const getTimeOfDayLabel = (timeOfDay: string | null) => {
+    if (!timeOfDay) return null;
+    if (timeOfDay === "day") return "de dia";
+    if (timeOfDay === "night") return "de noite";
+    return `no periodo ${timeOfDay}`;
+  };
+
+  const getRelativePhysicalStatsLabel = (value: number | null) => {
+    if (value === null) return null;
+    if (value > 0) return "Ataque maior que Defesa";
+    if (value < 0) return "Ataque menor que Defesa";
+    return "Ataque igual a Defesa";
+  };
+
+  const getGenderLabel = (genderId: number | null) => {
+    if (genderId === null) return null;
+    if (genderId === 1) return "Apenas femea";
+    if (genderId === 2) return "Apenas macho";
+    return `Genero ${genderId}`;
+  };
+
+  const renderRequirementSummary = (node: EvolutionChainNode) => {
+    if (node.requirements.length === 0) return null;
+
+    const optionNodes: ReactNode[] = [];
+
+    node.requirements.forEach((requirement, index) => {
+      const parts: ReactNode[] = [];
+
+      if (requirement.minLevel !== null) {
+        parts.push(
+          <span
+            key={`lvl-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            Nv. {requirement.minLevel}
+          </span>,
+        );
+      }
+
+      if (requirement.item) {
+        parts.push(
+          <span
+            key={`item-${index}`}
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            <img
+              src={requirement.item.spriteUrl}
+              alt={requirement.item.name}
+              referrerPolicy="no-referrer"
+              className="h-5 w-5 object-contain"
+            />
+            {humanizeSlug(requirement.item.name)}
+          </span>,
+        );
+      }
+
+      if (requirement.heldItem) {
+        parts.push(
+          <span
+            key={`held-item-${index}`}
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            segurando
+            <img
+              src={requirement.heldItem.spriteUrl}
+              alt={requirement.heldItem.name}
+              referrerPolicy="no-referrer"
+              className="h-5 w-5 object-contain"
+            />
+            {humanizeSlug(requirement.heldItem.name)}
+          </span>,
+        );
+      }
+
+      if (requirement.trigger === "trade") {
+        const tradeText = requirement.tradeSpeciesName
+          ? `Troca por ${humanizeSlug(requirement.tradeSpeciesName)}`
+          : "Troca";
+        parts.push(
+          <span
+            key={`trade-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            {tradeText}
+          </span>,
+        );
+      }
+
+      if (requirement.minHappiness !== null) {
+        parts.push(
+          <span
+            key={`happiness-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            Amizade alta
+          </span>,
+        );
+      }
+
+      const timeLabel = getTimeOfDayLabel(requirement.timeOfDay);
+      if (timeLabel) {
+        parts.push(
+          <span
+            key={`time-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            {timeLabel}
+          </span>,
+        );
+      }
+
+      if (requirement.knownMoveName) {
+        parts.push(
+          <span
+            key={`move-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            conhecendo {humanizeSlug(requirement.knownMoveName)}
+          </span>,
+        );
+      }
+
+      if (requirement.minBeauty !== null) {
+        parts.push(
+          <span
+            key={`beauty-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            Beleza minima
+          </span>,
+        );
+      }
+
+      if (requirement.minAffection !== null) {
+        parts.push(
+          <span
+            key={`affection-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            Afeicao minima
+          </span>,
+        );
+      }
+
+      if (requirement.knownMoveTypeName) {
+        parts.push(
+          <span
+            key={`move-type-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            tipo de golpe {humanizeSlug(requirement.knownMoveTypeName)}
+          </span>,
+        );
+      }
+
+      const physicalLabel = getRelativePhysicalStatsLabel(
+        requirement.relativePhysicalStats,
+      );
+      if (physicalLabel) {
+        parts.push(
+          <span
+            key={`physical-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            {physicalLabel}
+          </span>,
+        );
+      }
+
+      const genderLabel = getGenderLabel(requirement.genderId);
+      if (genderLabel) {
+        parts.push(
+          <span
+            key={`gender-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            {genderLabel}
+          </span>,
+        );
+      }
+
+      if (requirement.partySpeciesName) {
+        parts.push(
+          <span
+            key={`party-species-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            com {humanizeSlug(requirement.partySpeciesName)} na equipe
+          </span>,
+        );
+      }
+
+      if (requirement.partyTypeName) {
+        parts.push(
+          <span
+            key={`party-type-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            com tipo {humanizeSlug(requirement.partyTypeName)} na equipe
+          </span>,
+        );
+      }
+
+      if (requirement.needsOverworldRain) {
+        parts.push(
+          <span
+            key={`rain-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            Chuva no mapa
+          </span>,
+        );
+      }
+
+      if (requirement.turnUpsideDown) {
+        parts.push(
+          <span
+            key={`upside-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            Console invertido
+          </span>,
+        );
+      }
+
+      if (
+        parts.length === 0 &&
+        requirement.trigger &&
+        requirement.trigger !== "level-up" &&
+        requirement.trigger !== "trade" &&
+        requirement.trigger !== "use-item"
+      ) {
+        parts.push(
+          <span
+            key={`trigger-${index}`}
+            className="px-2 py-0.5 rounded bg-slate-900/90 border border-slate-700"
+          >
+            {humanizeSlug(requirement.trigger)}
+          </span>,
+        );
+      }
+
+      if (parts.length > 0) {
+        optionNodes.push(
+          <div
+            key={`option-${index}`}
+            className="flex flex-wrap items-center justify-center gap-1"
+          >
+            {parts}
+          </div>,
+        );
+      }
+    });
+
+    if (optionNodes.length === 0) return null;
+
+    return (
+      <div className="mt-1.5 flex flex-col items-center gap-1 text-[8px] font-bold text-slate-300 uppercase tracking-wide">
+        {optionNodes.map((optionNode, index) => (
+          <div
+            key={`render-option-${index}`}
+            className="flex flex-col items-center gap-1"
+          >
+            {optionNode}
+            {index < optionNodes.length - 1 && (
+              <span className="text-[7px] text-slate-500 font-mono">OU</span>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const EvolutionNodeCard = ({ node }: { node: EvolutionChainNode }) => {
+    const isActive = node.id === activePokemon.id;
+    const primaryNodeGenType = node.types[0] || "normal";
+    const accentColor = TYPE_COLORS[primaryNodeGenType] || "#777";
+
+    return (
+      <div
+        onClick={() => handleSelectPokemon(node.id)}
+        className={`w-full md:w-auto min-w-[150px] cursor-pointer p-4 rounded-2xl border flex flex-row md:flex-col items-center gap-4 md:gap-3 transition-all duration-300 ${
+          isActive
+            ? "bg-slate-850 border-indigo-500/80 scale-102 md:scale-105 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+            : "bg-slate-900 border-slate-800 hover:border-slate-650 hover:scale-[1.03]"
+        }`}
+        style={
+          isActive
+            ? {
+                borderColor: accentColor,
+                boxShadow: `0 0 20px ${accentColor}18`,
+              }
+            : {}
+        }
+      >
+        {/* Sprite frame */}
+        <div className="relative h-16 w-16 bg-slate-950 rounded-2xl border border-slate-800/60 overflow-hidden shrink-0 flex items-center justify-center shadow-inner group">
+          {/* Accent dynamic backlighting inside chain sprite */}
+          <div
+            className="absolute h-10 w-10 rounded-full blur-xl opacity-35"
+            style={{ backgroundColor: accentColor }}
+          />
+          <img
+            src={node.imageUrl}
+            alt={node.speciesName}
+            referrerPolicy="no-referrer"
+            className="h-13 w-13 object-contain z-10 filter drop-shadow-md transition-transform duration-300 group-hover:scale-110"
+          />
+        </div>
+
+        {/* Details */}
+        <div className="flex-1 md:flex-initial text-left md:text-center min-w-0">
+          <span className="text-[10px] font-mono text-slate-500 font-bold block leading-none mb-0.5">
+            #{String(node.id).padStart(3, "0")}
+          </span>
+          <span className="text-sm font-black text-white capitalize block truncate">
+            {node.speciesName}
+          </span>
+
+          {/* Types Row */}
+          <div className="flex justify-start md:justify-center gap-1 mt-1.5">
+            {node.types.map((type) => (
+              <span
+                key={type}
+                className="text-[8px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded shadow-sm"
+                style={{
+                  backgroundColor: TYPE_COLORS[type] || "#777",
+                }}
+              >
+                {TYPE_TRANSLATIONS[type] || type}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Active stage badge on mobile and desktop */}
+        {isActive && (
+          <div className="ml-auto md:ml-0 px-2 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-[8px] font-extrabold text-indigo-300 uppercase tracking-widest font-mono">
+            Estágio Atual
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const EvolutionConnector = ({ child }: { child: EvolutionChainNode }) => (
+    <div className="flex flex-col items-center justify-center mx-4 my-3 md:my-0 shrink-0 max-w-[180px]">
+      <div className="h-8 w-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-md">
+        <CaretDoubleRightIcon className="h-4.5 w-4.5 md:rotate-0 rotate-90 transition-transform duration-300" />
+      </div>
+      {renderRequirementSummary(child)}
+    </div>
+  );
+
+  const EvolutionBranch = ({ node }: { node: EvolutionChainNode }) => {
+    if (node.evolvesTo.length === 0) {
+      return <EvolutionNodeCard node={node} />;
+    }
+
+    if (node.evolvesTo.length === 1) {
+      const child = node.evolvesTo[0];
+      return (
+        <div className="flex flex-col md:flex-row items-center w-full md:w-auto">
+          <EvolutionNodeCard node={node} />
+          <EvolutionConnector child={child} />
+          <EvolutionBranch node={child} />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-4 w-full md:w-auto">
+        <EvolutionNodeCard node={node} />
+        <div className="flex flex-col gap-3 md:gap-4 w-full md:w-auto">
+          {node.evolvesTo.map((child) => (
+            <div
+              key={child.id}
+              className="flex flex-col justify-between md:flex-row items-center md:items-center gap-2 md:gap-3"
+            >
+              <EvolutionConnector child={child} />
+              <EvolutionBranch node={child} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -571,107 +965,17 @@ export function PokemonModal({
               Linha de Evolução da Espécie
             </h4>
 
-            {loadingExtra && evolutionChain.length === 0 ? (
+            {loadingExtra && !evolutionChain ? (
               <div className="flex items-center justify-center gap-3 py-8 bg-slate-950/20 p-4 rounded-2xl border border-slate-800">
                 <CircleNotchIcon className="h-5 w-5 animate-spin text-slate-500" />
                 <span className="text-xs text-slate-400 font-bold font-mono">
                   Mapeando genoma evolutivo...
                 </span>
               </div>
-            ) : evolutionChain.length > 0 ? (
+            ) : evolutionChain ? (
               <div className="bg-slate-950/35 border border-slate-800 rounded-2xl p-6 shadow-inner">
                 <div className="flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4">
-                  {evolutionChain.map((node, index) => {
-                    const isActive = node.id === activePokemon.id;
-                    const primaryNodeGenType = node.types[0] || "normal";
-                    const accentColor =
-                      TYPE_COLORS[primaryNodeGenType] || "#777";
-
-                    return (
-                      <div
-                        key={node.id}
-                        className="flex flex-col md:flex-row items-center w-full md:w-auto"
-                      >
-                        {/* Step Connector Arrow (points down on mobile, right on desktop) */}
-                        {index > 0 && (
-                          <div className="flex flex-col items-center justify-center mx-4 my-3 md:my-0 shrink-0">
-                            <div className="h-8 w-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-md">
-                              <CaretDoubleRightIcon className="h-4.5 w-4.5 md:rotate-0 rotate-90 transition-transform duration-300" />
-                            </div>
-                            <span className="text-[8px] font-mono font-black text-slate-500 tracking-wider mt-1 uppercase">
-                              EVOLUÇÃO
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Card Node */}
-                        <div
-                          onClick={() => handleSelectPokemon(node.id)}
-                          className={`w-full md:w-auto min-w-[150px] cursor-pointer p-4 rounded-2xl border flex flex-row md:flex-col items-center gap-4 md:gap-3 transition-all duration-300 ${
-                            isActive
-                              ? "bg-slate-850 border-indigo-500/80 scale-102 md:scale-105 shadow-[0_0_15px_rgba(99,102,241,0.2)]"
-                              : "bg-slate-900 border-slate-800 hover:border-slate-650 hover:scale-[1.03]"
-                          }`}
-                          style={
-                            isActive
-                              ? {
-                                  borderColor: accentColor,
-                                  boxShadow: `0 0 20px ${accentColor}18`,
-                                }
-                              : {}
-                          }
-                        >
-                          {/* Sprite frame */}
-                          <div className="relative h-16 w-16 bg-slate-950 rounded-2xl border border-slate-800/60 overflow-hidden shrink-0 flex items-center justify-center shadow-inner group">
-                            {/* Accent dynamic backlighting inside chain sprite */}
-                            <div
-                              className="absolute h-10 w-10 rounded-full blur-xl opacity-35"
-                              style={{ backgroundColor: accentColor }}
-                            />
-                            <img
-                              src={node.imageUrl}
-                              alt={node.speciesName}
-                              referrerPolicy="no-referrer"
-                              className="h-13 w-13 object-contain z-10 filter drop-shadow-md transition-transform duration-300 group-hover:scale-110"
-                            />
-                          </div>
-
-                          {/* Details */}
-                          <div className="flex-1 md:flex-initial text-left md:text-center min-w-0">
-                            <span className="text-[10px] font-mono text-slate-500 font-bold block leading-none mb-0.5">
-                              #{String(node.id).padStart(3, "0")}
-                            </span>
-                            <span className="text-sm font-black text-white capitalize block truncate">
-                              {node.speciesName}
-                            </span>
-
-                            {/* Types Row */}
-                            <div className="flex justify-start md:justify-center gap-1 mt-1.5">
-                              {node.types.map((type) => (
-                                <span
-                                  key={type}
-                                  className="text-[8px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded shadow-sm"
-                                  style={{
-                                    backgroundColor:
-                                      TYPE_COLORS[type] || "#777",
-                                  }}
-                                >
-                                  {TYPE_TRANSLATIONS[type] || type}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Active stage badge on mobile and desktop */}
-                          {isActive && (
-                            <div className="ml-auto md:ml-0 px-2 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/30 text-[8px] font-extrabold text-indigo-300 uppercase tracking-widest font-mono">
-                              Estágio Atual
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <EvolutionBranch node={evolutionChain} />
                 </div>
               </div>
             ) : (
